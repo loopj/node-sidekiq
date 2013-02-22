@@ -1,0 +1,28 @@
+{
+  "name": "sidekiq",
+  "version": "1.0.0",
+  "description": "Enqueue sidekiq jobs from your node apps.",
+  "main": "lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/loopj/node-sidekiq"
+  },
+  "keywords": [
+    "sidekiq",
+    "queue",
+    "redis"
+  ],
+  "author": {
+    "name": "James Smith",
+    "email": "james@loopj.com"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "grunt": "~0.4.0",
+    "grunt-contrib-coffee": "~0.4.0",
+    "grunt-bumpx": "~0.1.0"
+  },
+  "dependencies": {
+    "redis": "~0.8.2"
+  }
+}
