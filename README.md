@@ -2,7 +2,7 @@ Add Jobs to Sidekiq from Node.js
 ================================
 
 Enqueue jobs to sidekiq from your node apps. Closely mirrors the official 
-ruby sidekiq interface.
+ruby sidekiq interface and supports job scheduling.
 
 
 Installation
@@ -27,6 +27,11 @@ sidekiq = new Sidekiq(redisCon, process.env.NODE_ENV);
 sidekiq.enqueue("WorkerClass", ["argument", "array"], {
     retry: false,
     queue: "critical"
+});
+
+// Schedule a job in sidekiq
+sidekiq.enqueue("WorkerClass", ["some", "args"], {
+    at: new Date(2013, 11, 1)
 });
 ```
 

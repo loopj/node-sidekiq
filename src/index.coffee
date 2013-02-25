@@ -6,16 +6,16 @@ class Sidekiq
       return cb(err) if err?
       cb null, buf.toString("hex")
 
+  getQueueName = (queueName) ->
+    queueName or "default"
+
   constructor: (@redisConnection, @namespace) ->
 
   namespaceKey: (key) ->
     if @namespace? then "#{@namespace}:#{key}" else key
 
-  getQueueName: (queueName) ->
-    queueName or "default"
-
   getQueueKey: (queueName) ->
-    @namespaceKey "queue:#{@getQueueName(queueName)}"
+    @namespaceKey "queue:#{getQueueName(queueName)}"
 
   enqueue: (workerClass, args, payload) ->
     generateJobId (err, jid) =>
@@ -32,6 +32,6 @@ class Sidekiq
         @redisConnection.lpush @getQueueKey(payload.queue), JSON.stringify(payload)
 
         # Create the queue if it doesn't already exist
-        @redisConnection.sadd @namespaceKey("queues"), @getQueueName(payload.queue)
+        @redisConnection.sadd @namespaceKey("queues"), getQueueName(payload.queue)
 
   module.exports = Sidekiq
