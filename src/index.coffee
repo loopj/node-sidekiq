@@ -17,17 +17,21 @@ class Sidekiq
   getQueueKey: (queueName) ->
     @namespaceKey "queue:#{@getQueueName(queueName)}"
 
-  enqueue: (workerClass, args, opts) ->
+  enqueue: (workerClass, args, payload) ->
     generateJobId (err, jid) =>
       # Build job payload
-      opts.class = workerClass
-      opts.args = args
-      opts.jid = jid
+      payload.class = workerClass
+      payload.args = args
+      payload.jid = jid
 
-      # Push job payload to redis
-      @redisConnection.lpush @getQueueKey(opts.queue), JSON.stringify(opts)
+      if payload.at instanceof Date
+        # Push job payload to schedule
+        @redisConnection.zadd @namespaceKey("schedule"), payload.at.getTime() / 1000, JSON.stringify(payload)
+      else
+        # Push job payload to redis
+        @redisConnection.lpush @getQueueKey(payload.queue), JSON.stringify(payload)
 
-      # Create the queue if it doesn't already exist
-      @redisConnection.sadd @namespaceKey("queues"), @getQueueName(opts.queue)
+        # Create the queue if it doesn't already exist
+        @redisConnection.sadd @namespaceKey("queues"), @getQueueName(payload.queue)
 
   module.exports = Sidekiq
