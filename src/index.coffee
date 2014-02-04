@@ -9,7 +9,7 @@ class Sidekiq
   getQueueName = (queueName) ->
     queueName or "default"
 
-  constructor: (@redisConnection, @namespace) ->
+  constructor: (@redisConnection, @namespace = 'sidekiq') ->
 
   namespaceKey: (key) ->
     if @namespace? then "#{@namespace}:#{key}" else key
@@ -17,22 +17,33 @@ class Sidekiq
   getQueueKey: (queueName) ->
     @namespaceKey "queue:#{getQueueName(queueName)}"
 
-  enqueue: (workerClass, args, payload) ->
+  enqueue: (workerClass, args, payload, callback) ->
     generateJobId (err, jid) =>
       # Build job payload
       payload.class = workerClass
-      payload.args = args
-      payload.jid = jid
+      payload.args  = args
+      payload.jid   = jid
+      key_added     = null
 
       if payload.at instanceof Date
-        payload.at = payload.at.getTime() / 1000
+        payload.at  = payload.at.getTime() / 1000
+        key_added   = @namespaceKey("schedule")
         # Push job payload to schedule
-        @redisConnection.zadd @namespaceKey("schedule"), payload.at, JSON.stringify(payload)
+        @redisConnection.zadd key_added, payload.at, JSON.stringify(payload)
       else
         # Push job payload to redis
-        @redisConnection.lpush @getQueueKey(payload.queue), JSON.stringify(payload)
+        key_added = @getQueueKey(payload.queue)
+        @redisConnection.lpush key_added, JSON.stringify(payload)
 
         # Create the queue if it doesn't already exist
         @redisConnection.sadd @namespaceKey("queues"), getQueueName(payload.queue)
+      callback?.call(@, jid, key_added)
+
+  dequeue: (jid, redis_key)->
+    console.log jid, redis_key
+
+  cancel: @::dequeue
+
+  unsubscribe: @::dequeue
 
   module.exports = Sidekiq
