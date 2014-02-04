@@ -23,24 +23,25 @@ class Sidekiq
       payload.class = workerClass
       payload.args  = args
       payload.jid   = jid
-      key_added     = null
 
       if payload.at instanceof Date
         payload.at  = payload.at.getTime() / 1000
-        key_added   = @namespaceKey("schedule")
         # Push job payload to schedule
-        @redisConnection.zadd key_added, payload.at, JSON.stringify(payload)
+        @redisConnection.zadd @namespaceKey("schedule"), payload.at, JSON.stringify(payload)
       else
         # Push job payload to redis
-        key_added = @getQueueKey(payload.queue)
-        @redisConnection.lpush key_added, JSON.stringify(payload)
+        @redisConnection.lpush @getQueueKey(payload.queue), JSON.stringify(payload)
 
         # Create the queue if it doesn't already exist
         @redisConnection.sadd @namespaceKey("queues"), getQueueName(payload.queue)
-      callback?.call(@, jid, key_added)
+      callback?.call(@, payload)
 
-  dequeue: (jid, redis_key)->
-    console.log jid, redis_key
+  dequeue: (payload)->
+    if payload.at instanceof Date
+      @redisConnection.zrem @namespaceKey("schedule"), JSON.stringify(payload)
+    else
+      @redisConnection.lrem @getQueueKey(payload.queue), 0, JSON.stringify(payload)
+    return payload.jid
 
   cancel: @::dequeue
 
