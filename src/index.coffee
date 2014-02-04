@@ -17,7 +17,7 @@ class Sidekiq
   getQueueKey: (queueName) ->
     @namespaceKey "queue:#{getQueueName(queueName)}"
 
-  enqueue: (workerClass, args, payload, callback) ->
+  enqueue: (workerClass, args, payload, cb) ->
     generateJobId (err, jid) =>
       # Build job payload
       payload.class = workerClass
@@ -34,10 +34,10 @@ class Sidekiq
 
         # Create the queue if it doesn't already exist
         @redisConnection.sadd @namespaceKey("queues"), getQueueName(payload.queue)
-      callback?.call(@, payload)
+      cb?.call(@, payload) in cb instanceof Function
 
   dequeue: (payload)->
-    if payload.at instanceof Date
+    if payload.at?
       @redisConnection.zrem @namespaceKey("schedule"), JSON.stringify(payload)
     else
       @redisConnection.lrem @getQueueKey(payload.queue), 0, JSON.stringify(payload)
