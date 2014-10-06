@@ -31,7 +31,7 @@ class Sidekiq
         @redisConnection.zadd @namespaceKey("schedule"), payload.at, JSON.stringify(payload), cb
       else
         # Push job payload to redis
-        @redisConnection.lpush @getQueueKey(payload.queue), JSON.stringify(payload), (err) ->
+        @redisConnection.lpush @getQueueKey(payload.queue), JSON.stringify(payload), (err) =>
           if err
             cb(err)
           else
