@@ -30,6 +30,8 @@ class Sidekiq
         # Push job payload to schedule
         @redisConnection.zadd @namespaceKey("schedule"), payload.at, JSON.stringify(payload), cb
       else
+        # Add enqueued_at dat to payload
+        payload.enqueued_at = new Date().getTime() / 1000
         # Push job payload to redis
         @redisConnection.lpush @getQueueKey(payload.queue), JSON.stringify(payload), (err) =>
           if err
