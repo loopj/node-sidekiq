@@ -28,7 +28,9 @@ class Sidekiq
       if payload.at instanceof Date
         payload.at = payload.at.getTime() / 1000
         # Push job payload to schedule
-        @redisConnection.zadd @namespaceKey("schedule"), payload.at, JSON.stringify(payload), cb
+        @redisConnection.zadd @namespaceKey("schedule"), payload.at, JSON.stringify(payload), (err, response) ->
+          return cb(err) if err
+          cb(null, response, jid)
       else
         # Add enqueued_at dat to payload
         payload.enqueued_at = new Date().getTime() / 1000
@@ -38,6 +40,8 @@ class Sidekiq
             cb(err)
           else
             # Create the queue if it doesn't already exist
-            @redisConnection.sadd @namespaceKey("queues"), getQueueName(payload.queue), cb
+            @redisConnection.sadd @namespaceKey("queues"), getQueueName(payload.queue), (err, response) ->
+              return cb(err) if err
+              cb(null, response, jid)
 
   module.exports = Sidekiq
