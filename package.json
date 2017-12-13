@@ -23,6 +23,6 @@
         "grunt-bumpx": "~0.1.0"
     },
     "dependencies": {
-        "redis": "~0.8"
+        "redis": "~2.8"
     }
 }
